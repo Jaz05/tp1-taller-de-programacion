@@ -6,8 +6,13 @@ en Elixir usando procesos manuales (sin OTP).
 > TP1 de Taller de Programación — Cátedra Camejo
 
 ---
-## Disclaimer
-Usé IA para escribir este README y para ayudarme a destrabar errores, no para escribir el código del proyecto.
+## Aclaraciones
+Se considera el registro de pasajeros en el vuelo de manera implícita, es decir, se agregar al reservar y se quitan si su reserva expira o se cancela.
+
+Se hizo uso de IA para las siguientes tareas:
+- Escribir el README.md
+- Guía para resolución de problemas.
+- Consultas de sintaxis/documentación.
 
 ## Requisitos
 
@@ -30,7 +35,9 @@ mix compile
 mix run -e "CondorDelSur.Demo.run()"
 ```
 
-La demo dura aproximadamente 7 segundos y muestra cuatro escenarios:
+La demo dura aproximadamente 10 segundos, el timeout de reserva fue modificado a 5 segundos para hacerla más corta.
+
+Muestra cuatro escenarios:
 
 1. Tres pasajeros compitiendo por el mismo asiento — solo uno gana
 2. Reserva con confirmación por pago
@@ -87,7 +94,7 @@ tres acciones:
 **`ExpirationTask`**
 
 Cuando el `FlightServer` crea una reserva, spawnea una `ExpirationTask`
-para esa reserva. Esta tarea espera N milisegundos y le manda al
+para esa reserva con un timeout configurable. Esta tarea espera N milisegundos y le manda al
 `FlightServer` un mensaje `{:expire_reservation, id}`. Después de eso
 el proceso muere solo. Si la reserva ya fue confirmada o cancelada antes,
 el `FlightServer` ignora el mensaje.

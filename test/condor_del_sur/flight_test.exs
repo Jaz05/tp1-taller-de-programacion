@@ -1,7 +1,7 @@
 defmodule CondorDelSur.FlightTest do
   use ExUnit.Case, async: true
 
-  alias CondorDelSur.{Flight, Passenger, Reservation, Seat}
+  alias CondorDelSur.{Flight, Passenger, Reservation}
 
   defp setup_flight() do
     Flight.new("AR1", "BUE", "BRC", ["1A", "1B", "1C"])
@@ -73,5 +73,13 @@ defmodule CondorDelSur.FlightTest do
     assert reservation.status == :confirmed
     {:error, motivo} = Flight.expire_reservation(flight, reservation.id)
     assert motivo == :confirmed
+  end
+
+  test "no se puede cancelar una reserva ya expirada" do
+    flight = setup_flight()
+    p1 = Passenger.new("p1", "Juan", "11111111")
+    {:ok, flight, reservation} = Flight.start_reservation(flight, p1, "1A")
+    {:ok, flight, _} = Flight.expire_reservation(flight, reservation.id)
+    assert {:error, :expired} = Flight.cancel_reservation(flight, reservation.id)
   end
 end

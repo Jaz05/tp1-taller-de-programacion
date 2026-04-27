@@ -22,12 +22,12 @@ defmodule CondorDelSur.PassengerClient do
           {:error, motivo} ->
             log(
               passenger,
-              "no pudo confirmar el asiento (#{motivo}) con id de reserva: #{reservation.id}"
+              "no pudo confirmar el asiento #{seat_number} con id de reserva: #{reservation.id}. Motivo: #{motivo}"
             )
         end
 
       {:error, motivo} ->
-        log(passenger, "no consiguió el asiento (#{motivo})")
+        log(passenger, "no consiguió el asiento: #{seat_number}. Motivo:  #{motivo}")
     end
   end
 
@@ -46,12 +46,12 @@ defmodule CondorDelSur.PassengerClient do
           {:error, motivo} ->
             log(
               passenger,
-              "no pudo cancelar el asiento (#{motivo}) con id de reserva: #{reservation.id}"
+              "no pudo cancelar el asiento #{seat_number} con id de reserva: #{reservation.id}. Motivo: #{motivo}"
             )
         end
 
       {:error, motivo} ->
-        log(passenger, "no consiguió el asiento (#{motivo})")
+        log(passenger, "no consiguió el asiento #{seat_number}. Motivo: #{motivo}")
     end
   end
 
@@ -63,7 +63,7 @@ defmodule CondorDelSur.PassengerClient do
         log(passenger, "Reserva de asiento #{seat_number} con id: #{reservation.id}")
 
       {:error, motivo} ->
-        log(passenger, "no consiguió el asiento (#{motivo})")
+        log(passenger, "no consiguió el asiento #{seat_number}. Motivo: #{motivo}")
     end
   end
 

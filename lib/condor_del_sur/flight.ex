@@ -8,8 +8,10 @@ defmodule CondorDelSur.Flight do
     :passengers
   ]
 
+  alias CondorDelSur.{Flight, Reservation, Seat}
+
   def new(id, origin, destination, seat_numbers) do
-    %CondorDelSur.Flight{
+    %Flight{
       id: id,
       origin: origin,
       destination: destination,
@@ -21,19 +23,23 @@ defmodule CondorDelSur.Flight do
 
   defp create_seats(seat_numbers) do
     for numero_asiento <- seat_numbers, into: %{} do
-      {numero_asiento, CondorDelSur.Seat.new(numero_asiento)}
+      {numero_asiento, Seat.new(numero_asiento)}
     end
   end
 
-  def available_seats(%CondorDelSur.Flight{seats: seats}) do
+  def available_seats(%Flight{seats: seats}) do
     Map.values(seats) |> Enum.filter(fn seat -> seat.status == :available end)
   end
 
-  def start_reservation(%CondorDelSur.Flight{} = flight, passenger, seat_number) do
+  def start_reservation(%Flight{} = flight, passenger, seat_number) do
     with {:ok, seat} <- Map.fetch(flight.seats, seat_number),
-         {:ok, seat_reservado} <- CondorDelSur.Seat.reserve(seat) do
+         {:ok, seat_reservado} <- Seat.reserve(seat) do
       reservation =
-        CondorDelSur.Reservation.new(System.unique_integer(), passenger.id, seat_number)
+        Reservation.new(
+          "R#{System.unique_integer([:positive])}",
+          passenger.id,
+          seat_number
+        )
 
       flight_actualizado = %{
         flight
@@ -49,11 +55,11 @@ defmodule CondorDelSur.Flight do
     end
   end
 
-  def confirm_reservation(%CondorDelSur.Flight{} = flight, reservation_id) do
+  def confirm_reservation(%Flight{} = flight, reservation_id) do
     with {:ok, reservation} <- Map.fetch(flight.reservations, reservation_id),
          {:ok, seat_found} <- Map.fetch(flight.seats, reservation.seat_number),
-         {:ok, confirmed_reservation} <- CondorDelSur.Reservation.confirm(reservation),
-         {:ok, confirmed_seat} <- CondorDelSur.Seat.confirm(seat_found) do
+         {:ok, confirmed_reservation} <- Reservation.confirm(reservation),
+         {:ok, confirmed_seat} <- Seat.confirm(seat_found) do
       flight_actualizado = %{
         flight
         | reservations:
@@ -68,16 +74,17 @@ defmodule CondorDelSur.Flight do
     end
   end
 
-  def cancel_reservation(%CondorDelSur.Flight{} = flight, reservation_id) do
+  def cancel_reservation(%Flight{} = flight, reservation_id) do
     with {:ok, reservation} <- Map.fetch(flight.reservations, reservation_id),
          {:ok, seat_found} <- Map.fetch(flight.seats, reservation.seat_number),
-         {:ok, canceled_reservation} <- CondorDelSur.Reservation.cancel(reservation),
-         {:ok, released_seat} <- CondorDelSur.Seat.release(seat_found) do
+         {:ok, canceled_reservation} <- Reservation.cancel(reservation),
+         {:ok, released_seat} <- Seat.release(seat_found) do
       flight_actualizado = %{
         flight
         | reservations:
             Map.put(flight.reservations, canceled_reservation.id, canceled_reservation),
-          seats: Map.put(flight.seats, released_seat.number, released_seat)
+          seats: Map.put(flight.seats, released_seat.number, released_seat),
+          passengers: Map.delete(flight.passengers, reservation.passenger_id)
       }
 
       {:ok, flight_actualizado, canceled_reservation}
@@ -87,15 +94,16 @@ defmodule CondorDelSur.Flight do
     end
   end
 
-  def expire_reservation(%CondorDelSur.Flight{} = flight, reservation_id) do
+  def expire_reservation(%Flight{} = flight, reservation_id) do
     with {:ok, reservation} <- Map.fetch(flight.reservations, reservation_id),
          {:ok, seat_found} <- Map.fetch(flight.seats, reservation.seat_number),
-         {:ok, expired_reservation} <- CondorDelSur.Reservation.expire(reservation),
-         {:ok, released_seat} <- CondorDelSur.Seat.release(seat_found) do
+         {:ok, expired_reservation} <- Reservation.expire(reservation),
+         {:ok, released_seat} <- Seat.release(seat_found) do
       flight_actualizado = %{
         flight
         | reservations: Map.put(flight.reservations, expired_reservation.id, expired_reservation),
-          seats: Map.put(flight.seats, released_seat.number, released_seat)
+          seats: Map.put(flight.seats, released_seat.number, released_seat),
+          passengers: Map.delete(flight.passengers, reservation.passenger_id)
       }
 
       {:ok, flight_actualizado, expired_reservation}
@@ -105,7 +113,7 @@ defmodule CondorDelSur.Flight do
     end
   end
 
-  def summary(%CondorDelSur.Flight{} = flight) do
+  def summary(%Flight{} = flight) do
     seats = Map.values(flight.seats)
     reservations = Map.values(flight.reservations)
 

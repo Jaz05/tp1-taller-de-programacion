@@ -1,6 +1,8 @@
 defmodule CondorDelSur.FlightServer do
   alias CondorDelSur.{Flight, AuditLog, ExpirationTask}
 
+  @random_sleep 500
+
   def start(flight, expiration_seconds) do
     pid =
       spawn(fn ->
@@ -54,6 +56,9 @@ defmodule CondorDelSur.FlightServer do
         end
 
       {{:confirm_reservation, reservation_id}, from} ->
+        # Sleep para simular proceso de compra
+        Process.sleep(:rand.uniform(@random_sleep))
+
         case Flight.confirm_reservation(flight, reservation_id) do
           {:ok, new_flight, reservation} ->
             AuditLog.log({:reservation_confirmed, reservation.id})
@@ -87,8 +92,18 @@ defmodule CondorDelSur.FlightServer do
             AuditLog.log({:reservation_expired, reservation.id})
             loop(new_flight, expiration_seconds)
 
+          {:error, :cancelled} ->
+            loop(flight, expiration_seconds)
+
+          {:error, :confirmed} ->
+            loop(flight, expiration_seconds)
+
           {:error, motivo} ->
-            AuditLog.log({:reservation_expired_error, motivo})
+            AuditLog.log(
+              {:reservation_expired_error,
+               "No se pudo expirar #{reservation_id} porque el estado es: #{motivo}"}
+            )
+
             loop(flight, expiration_seconds)
         end
 
