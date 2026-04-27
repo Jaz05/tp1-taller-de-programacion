@@ -1,8 +1,6 @@
 defmodule CondorDelSur.FlightServer do
   alias CondorDelSur.{Flight, AuditLog, ExpirationTask}
 
-  @random_sleep 500
-
   def start(flight, expiration_seconds) do
     pid =
       spawn(fn ->
@@ -56,9 +54,6 @@ defmodule CondorDelSur.FlightServer do
         end
 
       {{:confirm_reservation, reservation_id}, from} ->
-        # Sleep para simular proceso de compra
-        Process.sleep(:rand.uniform(@random_sleep))
-
         case Flight.confirm_reservation(flight, reservation_id) do
           {:ok, new_flight, reservation} ->
             AuditLog.log({:reservation_confirmed, reservation.id})

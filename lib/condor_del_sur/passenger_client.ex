@@ -13,6 +13,8 @@ defmodule CondorDelSur.PassengerClient do
     case FlightServer.start_reservation(passenger, seat_number) do
       {:ok, reservation} ->
         log(passenger, "Reserva de asiento #{seat_number} con id: #{reservation.id}")
+
+        # Sleep para simular proceso de compra
         Process.sleep(:rand.uniform(@random_sleep))
 
         case FlightServer.confirm_reservation(reservation.id) do
