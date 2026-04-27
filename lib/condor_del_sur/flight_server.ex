@@ -2,14 +2,18 @@ defmodule CondorDelSur.FlightServer do
   alias CondorDelSur.{Flight, AuditLog, ExpirationTask}
 
   def start(flight, expiration_seconds) do
-    Process.monitor(Process.whereis(:audit_log))
-    pid = spawn(fn -> loop(flight, expiration_seconds) end)
+    pid =
+      spawn(fn ->
+        Process.monitor(Process.whereis(:audit_log))
+        loop(flight, expiration_seconds)
+      end)
+
     Process.register(pid, :flight_server)
     pid
   end
 
-  def start_reservation(passenger_id, seat_number) do
-    call({:start_reservation, passenger_id, seat_number})
+  def start_reservation(passenger, seat_number) do
+    call({:start_reservation, passenger, seat_number})
   end
 
   def confirm_reservation(reservation_id) do

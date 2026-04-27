@@ -4,7 +4,7 @@ defmodule CondorDelSur.FlightTest do
   alias CondorDelSur.{Flight, Passenger, Reservation, Seat}
 
   defp setup_flight() do
-    flight = Flight.new("AR1", "BUE", "BRC", ["1A", "1B", "1C"])
+    Flight.new("AR1", "BUE", "BRC", ["1A", "1B", "1C"])
   end
 
   test "iniciar reserva sobre un asiento disponible" do
